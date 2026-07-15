@@ -1,8 +1,27 @@
+import { useState } from 'react'
 import { useAuth } from '@/context/AuthContext'
+import { useDesigns } from '@/hooks/useDesigns'
+import type { DesignWithThumb } from '@/hooks/useDesigns'
 import { Wordmark } from '@/components/Wordmark'
+import { DesignCard } from '@/components/DesignCard'
+import { UploadDialog } from '@/components/UploadDialog'
+import { DesignViewer } from '@/components/DesignViewer'
 
 export default function Home() {
   const { user, signOut } = useAuth()
+  const { designs, loading, error, reload, setDesigns } = useDesigns(user?.id)
+  const [uploadOpen, setUploadOpen] = useState(false)
+  const [active, setActive] = useState<DesignWithThumb | null>(null)
+
+  const handleCreated = () => {
+    setUploadOpen(false)
+    reload()
+  }
+
+  const handleDeleted = (id: string) => {
+    setActive(null)
+    setDesigns((prev) => prev.filter((d) => d.id !== id))
+  }
 
   return (
     <div className="min-h-full">
@@ -26,29 +45,78 @@ export default function Home() {
           <div>
             <h1 className="font-display text-2xl font-semibold tracking-tight">Seus designs</h1>
             <p className="mt-1 text-sm text-muted">
-              Tudo o que você exportou do Figma, em um só lugar.
+              {designs.length > 0
+                ? `${designs.length} ${designs.length === 1 ? 'design' : 'designs'} na sua galeria.`
+                : 'Tudo o que você exportou do Figma, em um só lugar.'}
             </p>
           </div>
           <button
-            className="shrink-0 rounded-xl bg-ink px-4 py-2.5 text-sm font-medium text-white opacity-60 transition"
-            disabled
-            title="Disponível no próximo passo"
+            onClick={() => setUploadOpen(true)}
+            className="shrink-0 rounded-xl bg-ink px-4 py-2.5 text-sm font-medium text-white transition hover:bg-black"
           >
             Adicionar design
           </button>
         </div>
 
-        <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-line bg-surface/50 px-6 py-20 text-center">
-          <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-accent-soft text-lg text-accent">
-            ◳
+        {loading && (
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="animate-pulse overflow-hidden rounded-2xl border border-line bg-surface">
+                <div className="aspect-[4/3] w-full bg-canvas" />
+                <div className="space-y-2 p-4">
+                  <div className="h-3 w-2/3 rounded bg-line" />
+                  <div className="h-2 w-1/3 rounded bg-line" />
+                </div>
+              </div>
+            ))}
           </div>
-          <h2 className="font-display text-lg font-medium">Ainda não há designs</h2>
-          <p className="mt-1 max-w-sm text-sm text-muted">
-            Quando o upload estiver ativo, seus frames do Figma aparecerão aqui como um grid de
-            cards.
-          </p>
-        </div>
+        )}
+
+        {!loading && error && (
+          <div className="rounded-2xl border border-red-200 bg-red-50 px-6 py-10 text-center">
+            <p className="text-sm text-red-700">Não foi possível carregar seus designs: {error}</p>
+            <button
+              onClick={reload}
+              className="mt-4 rounded-lg border border-red-300 px-4 py-2 text-sm font-medium text-red-700 transition hover:bg-red-100"
+            >
+              Tentar de novo
+            </button>
+          </div>
+        )}
+
+        {!loading && !error && designs.length === 0 && (
+          <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-line bg-surface/50 px-6 py-20 text-center">
+            <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-accent-soft text-lg text-accent">
+              +
+            </div>
+            <h2 className="font-display text-lg font-medium">Ainda não há designs</h2>
+            <p className="mt-1 max-w-sm text-sm text-muted">
+              Clique em “Adicionar design” e envie um frame exportado do Figma. Ele aparece aqui como
+              um card na hora.
+            </p>
+          </div>
+        )}
+
+        {!loading && !error && designs.length > 0 && (
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {designs.map((d) => (
+              <DesignCard key={d.id} design={d} onOpen={() => setActive(d)} />
+            ))}
+          </div>
+        )}
       </main>
+
+      {uploadOpen && user && (
+        <UploadDialog
+          userId={user.id}
+          onClose={() => setUploadOpen(false)}
+          onCreated={handleCreated}
+        />
+      )}
+
+      {active && (
+        <DesignViewer design={active} onClose={() => setActive(null)} onDeleted={handleDeleted} />
+      )}
     </div>
   )
 }

@@ -1,0 +1,51 @@
+import type { DesignWithThumb } from '@/hooks/useDesigns'
+
+export function DesignCard({
+  design,
+  onOpen,
+}: {
+  design: DesignWithThumb
+  onOpen: () => void
+}) {
+  return (
+    <button
+      onClick={onOpen}
+      className="group flex flex-col overflow-hidden rounded-2xl border border-line bg-surface text-left transition hover:border-ink/15 hover:shadow-[0_4px_20px_rgba(23,24,26,0.06)]"
+    >
+      <div className="relative aspect-[4/3] w-full overflow-hidden bg-canvas">
+        {design.thumbUrl ? (
+          <img
+            src={design.thumbUrl}
+            alt={design.title}
+            loading="lazy"
+            className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.02]"
+          />
+        ) : (
+          <div className="flex h-full w-full items-center justify-center text-sm text-muted">
+            sem prévia
+          </div>
+        )}
+        <span className="absolute left-3 top-3 rounded-md bg-ink/80 px-2 py-0.5 text-[11px] font-medium uppercase tracking-wide text-white backdrop-blur">
+          {design.file_type}
+        </span>
+      </div>
+      <div className="flex flex-col gap-1 px-4 py-3">
+        <h3 className="truncate font-display text-sm font-medium text-ink">{design.title}</h3>
+        <div className="flex items-center justify-between gap-2">
+          <p className="text-xs text-muted">
+            {new Date(design.created_at).toLocaleDateString('pt-BR', {
+              day: '2-digit',
+              month: 'short',
+              year: 'numeric',
+            })}
+          </p>
+          {design.tags.length > 0 && (
+            <p className="truncate text-xs text-accent">
+              {design.tags.slice(0, 2).map((t) => `#${t}`).join(' ')}
+            </p>
+          )}
+        </div>
+      </div>
+    </button>
+  )
+}
