@@ -63,7 +63,8 @@ Abra o endereço mostrado no terminal (por padrão http://localhost:5173).
 - Visualizador em modal com slider entre as telas (setas, teclado, miniaturas)
 - pdf.js carregado sob demanda (bundle inicial leve)
 - Limpeza de órfãos: uploads incompletos não deixam lixo no Storage
-- Página de configurações: criar/renomear/excluir projetos, trocar senha e visão geral de armazenamento
+- Página de configurações: criar/renomear/excluir projetos, trocar o projeto de cada design, trocar senha e visão geral de armazenamento
+- Editar o cadastro de um design (pelo botão “Editar” no visualizador): título, descrição, tags, projeto e telas — adicionar, remover e reordenar (a 1ª tela é a capa)
 
 ## Estrutura
 
@@ -89,6 +90,7 @@ src/
 │   ├── GalleryToolbar.tsx   Busca, filtro de projeto, chips de tags
 │   ├── DesignCard.tsx       Card com capa e contador de telas
 │   ├── UploadDialog.tsx     Upload de várias telas + projeto
+│   ├── EditDesignDialog.tsx Editar campos, projeto e telas de um design
 │   └── DesignViewer.tsx     Slider entre as telas
 ├── pages/
 │   ├── Login.tsx

@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '@/context/AuthContext'
 import { useGallery } from '@/hooks/useGallery'
@@ -7,6 +7,7 @@ import { Wordmark } from '@/components/Wordmark'
 import { DesignCard } from '@/components/DesignCard'
 import { UploadDialog } from '@/components/UploadDialog'
 import { DesignViewer } from '@/components/DesignViewer'
+import { EditDesignDialog } from '@/components/EditDesignDialog'
 import { GalleryToolbar } from '@/components/GalleryToolbar'
 
 export default function Home() {
@@ -15,9 +16,19 @@ export default function Home() {
 
   const [uploadOpen, setUploadOpen] = useState(false)
   const [active, setActive] = useState<DesignFull | null>(null)
+  const [editing, setEditing] = useState<DesignFull | null>(null)
   const [search, setSearch] = useState('')
   const [projectFilter, setProjectFilter] = useState('all')
   const [selectedTags, setSelectedTags] = useState<string[]>([])
+
+  // Mantém o design aberto no visualizador em sincronia após recarregar
+  // (por exemplo, depois de uma edição). Fecha se ele deixou de existir.
+  useEffect(() => {
+    if (!active) return
+    const fresh = designs.find((d) => d.id === active.id)
+    if (fresh !== active) setActive(fresh ?? null)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [designs])
 
   const allTags = useMemo(() => {
     const set = new Set<string>()
@@ -233,7 +244,21 @@ export default function Home() {
           design={active}
           projectName={projectName(active.project_id)}
           onClose={() => setActive(null)}
+          onEdit={() => setEditing(active)}
           onDeleted={handleDeleted}
+        />
+      )}
+
+      {editing && user && (
+        <EditDesignDialog
+          userId={user.id}
+          design={editing}
+          projects={projects}
+          onClose={() => setEditing(null)}
+          onSaved={() => {
+            setEditing(null)
+            reload()
+          }}
         />
       )}
     </div>

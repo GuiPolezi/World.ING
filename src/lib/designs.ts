@@ -126,3 +126,114 @@ function fileTypeOf(file: File): FileType {
   if (!t) throw new Error(`Formato não suportado: ${file.name}`)
   return t
 }
+
+// Troca apenas o projeto de um design (usado nas Configurações).
+export async function updateDesignProject(
+  designId: string,
+  projectId: string | null,
+): Promise<void> {
+  const { error } = await supabase
+    .from('designs')
+    .update({ project_id: projectId })
+    .eq('id', designId)
+  if (error) throw error
+}
+
+export type FinalScreen =
+  | { type: 'existing'; id: string }
+  | { type: 'new'; file: File }
+
+export interface SaveDesignEditsInput {
+  userId: string
+  designId: string
+  title: string
+  description?: string
+  tags: string[]
+  projectId: string | null
+  // Telas originais (para resolver os caminhos das que forem removidas).
+  originalScreens: { id: string; storage_path: string; thumbnail_path: string | null }[]
+  // Ordem final desejada, misturando telas existentes e arquivos novos.
+  finalOrder: FinalScreen[]
+}
+
+// Aplica a edição completa de um design: campos, ordem, adição e remoção de telas.
+export async function saveDesignEdits(input: SaveDesignEditsInput): Promise<void> {
+  const { userId, designId, originalScreens, finalOrder } = input
+
+  const keptIds = new Set(
+    finalOrder.filter((f) => f.type === 'existing').map((f) => f.id),
+  )
+  const removed = originalScreens.filter((s) => !keptIds.has(s.id))
+
+  // 1. Enviar as telas novas na posição final (com limpeza em caso de falha).
+  const uploaded: string[] = []
+  try {
+    for (let i = 0; i < finalOrder.length; i++) {
+      const item = finalOrder[i]
+      if (item.type !== 'new') continue
+      const fileType = fileTypeOf(item.file)
+      const screenId = crypto.randomUUID()
+      const thumb = await generateThumbnail(item.file, fileType)
+      const origPath = screenOriginalPath(userId, designId, screenId, fileType)
+      const tPath = screenThumbPath(userId, designId, screenId)
+      await uploadFile(origPath, item.file, TYPE_TO_MIME[fileType])
+      uploaded.push(origPath)
+      await uploadFile(tPath, thumb.blob, 'image/png')
+      uploaded.push(tPath)
+      const { error } = await supabase.from('design_screens').insert({
+        id: screenId,
+        design_id: designId,
+        user_id: userId,
+        storage_path: origPath,
+        thumbnail_path: tPath,
+        file_type: fileType,
+        file_size: item.file.size,
+        width: thumb.width,
+        height: thumb.height,
+        position: i,
+      })
+      if (error) throw error
+    }
+  } catch (e) {
+    await removeFiles(uploaded).catch(() => {})
+    throw e
+  }
+
+  // 2. Atualizar a posição das telas existentes que permaneceram.
+  for (let i = 0; i < finalOrder.length; i++) {
+    const item = finalOrder[i]
+    if (item.type !== 'existing') continue
+    const { error } = await supabase
+      .from('design_screens')
+      .update({ position: i })
+      .eq('id', item.id)
+    if (error) throw error
+  }
+
+  // 3. Remover as telas excluídas (banco + Storage).
+  if (removed.length > 0) {
+    const { error } = await supabase
+      .from('design_screens')
+      .delete()
+      .in('id', removed.map((s) => s.id))
+    if (error) throw error
+    const paths: string[] = []
+    for (const s of removed) {
+      paths.push(s.storage_path)
+      if (s.thumbnail_path) paths.push(s.thumbnail_path)
+    }
+    await removeFiles(paths).catch(() => {})
+  }
+
+  // 4. Atualizar os campos do design.
+  const { error } = await supabase
+    .from('designs')
+    .update({
+      title: input.title.trim() || 'Sem título',
+      description: input.description?.trim() || null,
+      tags: input.tags,
+      project_id: input.projectId,
+    })
+    .eq('id', designId)
+  if (error) throw error
+}

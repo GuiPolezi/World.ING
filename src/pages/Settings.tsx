@@ -3,7 +3,9 @@ import type { ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '@/context/AuthContext'
 import { useProjectStats } from '@/hooks/useProjectStats'
+import type { DesignRef } from '@/hooks/useProjectStats'
 import { createProject, renameProject, deleteProject } from '@/lib/projects'
+import { updateDesignProject } from '@/lib/designs'
 import { Wordmark } from '@/components/Wordmark'
 import type { Project } from '@/types/database'
 
@@ -19,7 +21,7 @@ function formatBytes(bytes: number): string {
 
 export default function Settings() {
   const { user, updatePassword, signOut } = useAuth()
-  const { projects, countByProject, noProjectCount, totals, loading, error, reload } =
+  const { projects, designs, countByProject, noProjectCount, totals, loading, error, reload } =
     useProjectStats(user?.id)
 
   return (
@@ -50,6 +52,13 @@ export default function Settings() {
           projects={projects}
           countByProject={countByProject}
           noProjectCount={noProjectCount}
+          loading={loading}
+          onChanged={reload}
+        />
+
+        <DesignsSection
+          designs={designs}
+          projects={projects}
           loading={loading}
           onChanged={reload}
         />
@@ -256,6 +265,81 @@ function ProjectRow({
           Excluir
         </button>
       </div>
+    </div>
+  )
+}
+
+/* ---------------- Designs: trocar de projeto ---------------- */
+
+function DesignsSection({
+  designs,
+  projects,
+  loading,
+  onChanged,
+}: {
+  designs: DesignRef[]
+  projects: Project[]
+  loading: boolean
+  onChanged: () => Promise<void>
+}) {
+  return (
+    <Section
+      title="Designs"
+      description="Mova um design de projeto. Para editar título, telas e mais, use “Editar” ao abrir o design."
+    >
+      <div className="divide-y divide-line">
+        {loading && <p className="py-3 text-sm text-muted">Carregando…</p>}
+
+        {!loading && designs.length === 0 && (
+          <p className="py-3 text-sm text-muted">Nenhum design ainda.</p>
+        )}
+
+        {!loading &&
+          designs.map((d) => (
+            <DesignProjectRow key={d.id} design={d} projects={projects} onChanged={onChanged} />
+          ))}
+      </div>
+    </Section>
+  )
+}
+
+function DesignProjectRow({
+  design,
+  projects,
+  onChanged,
+}: {
+  design: DesignRef
+  projects: Project[]
+  onChanged: () => Promise<void>
+}) {
+  const [busy, setBusy] = useState(false)
+
+  const change = async (value: string) => {
+    setBusy(true)
+    try {
+      await updateDesignProject(design.id, value === 'none' ? null : value)
+      await onChanged()
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <div className="flex items-center justify-between gap-3 py-3">
+      <p className="min-w-0 flex-1 truncate text-sm font-medium text-ink">{design.title}</p>
+      <select
+        value={design.project_id ?? 'none'}
+        onChange={(e) => change(e.target.value)}
+        disabled={busy}
+        className="shrink-0 rounded-lg border border-line bg-canvas px-3 py-1.5 text-sm outline-none transition focus:border-accent focus:bg-surface focus:ring-4 focus:ring-accent/10 disabled:opacity-60 sm:w-48"
+      >
+        <option value="none">Sem projeto</option>
+        {projects.map((p) => (
+          <option key={p.id} value={p.id}>
+            {p.name}
+          </option>
+        ))}
+      </select>
     </div>
   )
 }

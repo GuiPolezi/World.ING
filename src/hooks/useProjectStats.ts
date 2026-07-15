@@ -9,8 +9,15 @@ export interface Totals {
   bytes: number
 }
 
+export interface DesignRef {
+  id: string
+  title: string
+  project_id: string | null
+}
+
 export interface ProjectStats {
   projects: Project[]
+  designs: DesignRef[]
   countByProject: Record<string, number>
   noProjectCount: number
   totals: Totals
@@ -21,6 +28,7 @@ export interface ProjectStats {
 
 export function useProjectStats(userId: string | undefined): ProjectStats {
   const [projects, setProjects] = useState<Project[]>([])
+  const [designs, setDesigns] = useState<DesignRef[]>([])
   const [countByProject, setCountByProject] = useState<Record<string, number>>({})
   const [noProjectCount, setNoProjectCount] = useState(0)
   const [totals, setTotals] = useState<Totals>({ projects: 0, designs: 0, screens: 0, bytes: 0 })
@@ -34,7 +42,7 @@ export function useProjectStats(userId: string | undefined): ProjectStats {
 
     const [projectsRes, designsRes, screensRes] = await Promise.all([
       supabase.from('projects').select('*').order('name', { ascending: true }),
-      supabase.from('designs').select('id, project_id'),
+      supabase.from('designs').select('id, title, project_id').order('created_at', { ascending: false }),
       supabase.from('design_screens').select('design_id, file_size'),
     ])
 
@@ -60,6 +68,7 @@ export function useProjectStats(userId: string | undefined): ProjectStats {
     for (const s of screens) bytes += s.file_size ?? 0
 
     setProjects(projs)
+    setDesigns(designs)
     setCountByProject(count)
     setNoProjectCount(noProj)
     setTotals({
@@ -75,5 +84,5 @@ export function useProjectStats(userId: string | undefined): ProjectStats {
     load()
   }, [load])
 
-  return { projects, countByProject, noProjectCount, totals, loading, error, reload: load }
+  return { projects, designs, countByProject, noProjectCount, totals, loading, error, reload: load }
 }
