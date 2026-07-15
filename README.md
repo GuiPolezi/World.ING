@@ -63,6 +63,7 @@ Abra o endereço mostrado no terminal (por padrão http://localhost:5173).
 - Visualizador em modal com slider entre as telas (setas, teclado, miniaturas)
 - pdf.js carregado sob demanda (bundle inicial leve)
 - Limpeza de órfãos: uploads incompletos não deixam lixo no Storage
+- Página de configurações: criar/renomear/excluir projetos, trocar senha e visão geral de armazenamento
 
 ## Estrutura
 
@@ -79,7 +80,9 @@ src/
 │   └── projects.ts          Criar/excluir projeto
 ├── types/database.ts        Tipos do schema
 ├── context/AuthContext.tsx  Sessão + auth
-├── hooks/useGallery.ts      Projetos + designs + telas + signed URLs
+├── hooks/
+│   ├── useGallery.ts        Projetos + designs + telas + signed URLs
+│   └── useProjectStats.ts   Projetos + contagens + totais de armazenamento
 ├── components/
 │   ├── ProtectedRoute.tsx
 │   ├── Wordmark.tsx
@@ -89,7 +92,8 @@ src/
 │   └── DesignViewer.tsx     Slider entre as telas
 ├── pages/
 │   ├── Login.tsx
-│   └── Home.tsx             Galeria (toolbar + grupos + diálogos)
+│   ├── Home.tsx             Galeria (toolbar + grupos + diálogos)
+│   └── Settings.tsx         Projetos, conta e armazenamento
 ├── App.tsx
 └── main.tsx
 ```

@@ -11,6 +11,14 @@ export async function createProject(userId: string, name: string): Promise<Proje
   return data
 }
 
+export async function renameProject(projectId: string, name: string): Promise<void> {
+  const { error } = await supabase
+    .from('projects')
+    .update({ name: name.trim() })
+    .eq('id', projectId)
+  if (error) throw error
+}
+
 // Remove o projeto. Os designs não são apagados: project_id vira null
 // (ON DELETE SET NULL no schema), então eles caem em "Sem projeto".
 export async function deleteProject(projectId: string): Promise<void> {

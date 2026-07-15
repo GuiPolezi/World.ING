@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { useAuth } from '@/context/AuthContext'
 import { useGallery } from '@/hooks/useGallery'
 import type { DesignFull } from '@/hooks/useGallery'
@@ -72,8 +73,23 @@ export default function Home() {
       <header className="sticky top-0 z-10 border-b border-line bg-canvas/80 backdrop-blur">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4 sm:px-6">
           <Wordmark className="text-lg" />
-          <div className="flex items-center gap-3 sm:gap-4">
+          <div className="flex items-center gap-2 sm:gap-3">
             <span className="hidden text-sm text-muted sm:inline">{user?.email}</span>
+            <Link
+              to="/settings"
+              aria-label="Configurações"
+              className="flex h-9 w-9 items-center justify-center rounded-lg border border-line bg-surface text-ink transition hover:border-ink/20"
+            >
+              <svg width="17" height="17" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                <circle cx="10" cy="10" r="2.6" stroke="currentColor" strokeWidth="1.5" />
+                <path
+                  d="M10 1.8v1.6M10 16.6v1.6M3.8 3.8l1.15 1.15M15.05 15.05l1.15 1.15M1.8 10h1.6M16.6 10h1.6M3.8 16.2l1.15-1.15M15.05 4.95l1.15-1.15"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                />
+              </svg>
+            </Link>
             <button
               onClick={signOut}
               className="rounded-lg border border-line bg-surface px-3 py-1.5 text-sm font-medium text-ink transition hover:border-ink/20"
