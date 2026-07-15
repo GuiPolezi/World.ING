@@ -1,13 +1,28 @@
 # World.ING
 
-Galeria pessoal de designs. Reúna, organize e revisite os frames que você exporta do Figma (PNG, JPG, SVG e PDF) em um só lugar. Acesso privado com login.
+Organizador de designs. Reúna as telas que você exporta do Figma (PNG, JPG, SVG e PDF) em projetos, navegue por elas em um slider e encontre tudo por busca e tags. Acesso privado com login.
 
 Stack: React + TypeScript + Vite + Tailwind CSS + Supabase.
+
+## Modelo
+
+Hierarquia em três níveis:
+
+- **Projeto** agrupa designs (opcional)
+- **Design** é um card da galeria; agrupa uma ou mais telas
+- **Tela** é um arquivo exportado do Figma
 
 ## Pré-requisitos
 
 - Node.js 18 ou superior
-- Um projeto no Supabase com o schema já aplicado (arquivo `worlding_schema.sql`)
+- Um projeto no Supabase
+
+## Banco de dados
+
+No Dashboard do Supabase → SQL Editor → New query, rode:
+
+- **Instalação nova:** `db/schema.sql`
+- **Já rodou a versão anterior (arquivo único por design):** `db/migration_v1_to_v2.sql`
 
 ## Como rodar
 
@@ -17,7 +32,7 @@ Stack: React + TypeScript + Vite + Tailwind CSS + Supabase.
    npm install
    ```
 
-2. Configure as variáveis de ambiente. Copie o exemplo e preencha com os dados do seu projeto (Dashboard do Supabase → Project Settings → API):
+2. Configure o `.env` (Dashboard → Project Settings → API):
 
    ```bash
    cp .env.example .env
@@ -28,7 +43,7 @@ Stack: React + TypeScript + Vite + Tailwind CSS + Supabase.
    VITE_SUPABASE_ANON_KEY=sua-anon-public-key
    ```
 
-3. Suba o servidor de desenvolvimento:
+3. Suba o servidor:
 
    ```bash
    npm run dev
@@ -38,53 +53,59 @@ Abra o endereço mostrado no terminal (por padrão http://localhost:5173).
 
 ## O que já funciona
 
-- Autenticação por e-mail e senha (entrar e criar conta), sessão persistente e rota protegida
-- Galeria em grid, com miniatura de cada design
-- Upload por arrastar-e-soltar (ou clique), com título, descrição e tags
-- Geração de miniatura no navegador — canvas para imagens, primeira página via pdf.js para PDF
-- Arquivos privados: as imagens do grid usam signed URLs temporárias
-- Visualizador em modal (imagem ou PDF), com abrir em nova aba e excluir
-- pdf.js carregado sob demanda, só quando há um PDF (bundle inicial leve)
+- Login por e-mail e senha, sessão persistente e rota protegida
+- Galeria em grid, agrupada por projeto, responsiva
+- Busca por título e filtro por tags
+- Upload de uma ou várias telas por design (arrastar-e-soltar ou clique)
+- Criar projeto direto no upload e atribuir o design a ele
+- Miniatura gerada no navegador — canvas para imagens, pdf.js para PDF
+- Arquivos privados via signed URLs temporárias
+- Visualizador em modal com slider entre as telas (setas, teclado, miniaturas)
+- pdf.js carregado sob demanda (bundle inicial leve)
+- Limpeza de órfãos: uploads incompletos não deixam lixo no Storage
 
 ## Estrutura
 
 ```
+db/
+├── schema.sql               Schema completo (instalação nova)
+└── migration_v1_to_v2.sql   Migração da versão anterior
 src/
 ├── lib/
-│   ├── supabase.ts        Cliente do Supabase (lê o .env)
-│   ├── storage.ts         Caminhos, upload, signed URLs, remoção de arquivos
-│   ├── thumbnails.ts      Geração de miniatura (imagem e PDF)
-│   └── designs.ts         Upload e exclusão de designs (com limpeza de órfãos)
-├── types/database.ts      Tipos que espelham o schema SQL
-├── context/AuthContext.tsx  Sessão + sign in / sign up / sign out
-├── hooks/useDesigns.ts    Carrega os designs + signed URLs das miniaturas
+│   ├── supabase.ts          Cliente do Supabase
+│   ├── storage.ts           Caminhos, upload, signed URLs
+│   ├── thumbnails.ts        Miniatura (imagem e PDF)
+│   ├── designs.ts           Criar/excluir design com telas
+│   └── projects.ts          Criar/excluir projeto
+├── types/database.ts        Tipos do schema
+├── context/AuthContext.tsx  Sessão + auth
+├── hooks/useGallery.ts      Projetos + designs + telas + signed URLs
 ├── components/
-│   ├── ProtectedRoute.tsx Redireciona para /login sem sessão
-│   ├── Wordmark.tsx       Marca "World.ING"
-│   ├── DesignCard.tsx     Card do grid
-│   ├── UploadDialog.tsx   Modal de upload
-│   └── DesignViewer.tsx   Modal de visualização
+│   ├── ProtectedRoute.tsx
+│   ├── Wordmark.tsx
+│   ├── GalleryToolbar.tsx   Busca, filtro de projeto, chips de tags
+│   ├── DesignCard.tsx       Card com capa e contador de telas
+│   ├── UploadDialog.tsx     Upload de várias telas + projeto
+│   └── DesignViewer.tsx     Slider entre as telas
 ├── pages/
-│   ├── Login.tsx          Tela de acesso
-│   └── Home.tsx           Galeria (grid + upload + visualizador)
-├── App.tsx                Rotas
-└── main.tsx               Entrada (Router + AuthProvider)
+│   ├── Login.tsx
+│   └── Home.tsx             Galeria (toolbar + grupos + diálogos)
+├── App.tsx
+└── main.tsx
 ```
 
 ## Convenção de arquivos no Storage
 
-Cada design guarda dois arquivos no bucket privado `designs`, sob uma pasta com o id do dono:
+Bucket privado `designs`, uma pasta por tela:
 
 ```
-{user_id}/{design_id}/original.<ext>   arquivo exportado do Figma
-{user_id}/{design_id}/thumb.png        miniatura gerada no upload
+{user_id}/{design_id}/{screen_id}/original.<ext>
+{user_id}/{design_id}/{screen_id}/thumb.png
 ```
-
-As políticas de Storage garantem que cada usuário só acessa a própria pasta.
 
 ## Próximos passos possíveis
 
-- Projetos (agrupar designs) e filtro por tags
-- Busca por título
-- Reordenar / renomear designs
+- Reordenar as telas de um design (arrastar)
+- Adicionar/remover telas de um design existente
+- Renomear e excluir projetos pela interface
 - Trocar o carregamento manual por React Query (cache e revalidação)

@@ -2,73 +2,127 @@ import { supabase } from '@/lib/supabase'
 import type { Design, FileType } from '@/types/database'
 import { generateThumbnail } from '@/lib/thumbnails'
 import {
-  originalPath,
-  thumbPath,
+  screenOriginalPath,
+  screenThumbPath,
   uploadFile,
-  removeDesignFiles,
+  removeFiles,
   TYPE_TO_MIME,
 } from '@/lib/storage'
 
-export interface NewDesignInput {
+export interface CreateDesignInput {
   userId: string
-  file: File
-  fileType: FileType
+  projectId: string | null
   title: string
   description?: string
   tags?: string[]
+  files: File[]
 }
 
-export async function uploadDesign(input: NewDesignInput): Promise<Design> {
-  const { userId, file, fileType } = input
+export interface UploadProgress {
+  done: number
+  total: number
+}
+
+// Cria um design e envia cada arquivo como uma tela.
+// Faz limpeza de órfãos se qualquer etapa falhar.
+export async function createDesign(
+  input: CreateDesignInput,
+  onProgress?: (p: UploadProgress) => void,
+): Promise<Design> {
+  const { userId, projectId, title, description, tags, files } = input
   const designId = crypto.randomUUID()
+  const uploaded: string[] = []
 
-  // 1. Miniatura + dimensões do original (feito no navegador).
-  const thumb = await generateThumbnail(file, fileType)
-
-  // 2. Arquivos no Storage: original + miniatura.
-  const origPath = originalPath(userId, designId, fileType)
-  const tPath = thumbPath(userId, designId)
-
-  await uploadFile(origPath, file, TYPE_TO_MIME[fileType])
   try {
-    await uploadFile(tPath, thumb.blob, 'image/png')
+    const { data: design, error } = await supabase
+      .from('designs')
+      .insert({
+        id: designId,
+        user_id: userId,
+        project_id: projectId,
+        title: title.trim() || 'Sem título',
+        description: description?.trim() || null,
+        tags: tags ?? [],
+      })
+      .select()
+      .single()
+    if (error) throw error
+
+    let position = 0
+    for (const file of files) {
+      const fileType = fileTypeOf(file)
+      const screenId = crypto.randomUUID()
+      const thumb = await generateThumbnail(file, fileType)
+
+      const origPath = screenOriginalPath(userId, designId, screenId, fileType)
+      const tPath = screenThumbPath(userId, designId, screenId)
+
+      await uploadFile(origPath, file, TYPE_TO_MIME[fileType])
+      uploaded.push(origPath)
+      await uploadFile(tPath, thumb.blob, 'image/png')
+      uploaded.push(tPath)
+
+      const { error: sErr } = await supabase.from('design_screens').insert({
+        id: screenId,
+        design_id: designId,
+        user_id: userId,
+        storage_path: origPath,
+        thumbnail_path: tPath,
+        file_type: fileType,
+        file_size: file.size,
+        width: thumb.width,
+        height: thumb.height,
+        position,
+      })
+      if (sErr) throw sErr
+
+      position++
+      onProgress?.({ done: position, total: files.length })
+    }
+
+    return design
   } catch (e) {
-    // Se a miniatura falhar, não deixa o original órfão no Storage.
-    await removeDesignFiles(userId, designId).catch(() => {})
+    // Desfaz tudo: arquivos + a linha do design (cascade remove telas).
+    await removeFiles(uploaded).catch(() => {})
+    try {
+      await supabase.from('designs').delete().eq('id', designId)
+    } catch {
+      // ignora
+    }
     throw e
   }
-
-  // 3. Linha de metadados no banco.
-  const { data, error } = await supabase
-    .from('designs')
-    .insert({
-      id: designId,
-      user_id: userId,
-      title: input.title.trim() || file.name,
-      description: input.description?.trim() || null,
-      storage_path: origPath,
-      thumbnail_path: tPath,
-      file_type: fileType,
-      file_size: file.size,
-      width: thumb.width,
-      height: thumb.height,
-      tags: input.tags ?? [],
-    })
-    .select()
-    .single()
-
-  if (error) {
-    // Desfaz os uploads se o insert falhar.
-    await removeDesignFiles(userId, designId).catch(() => {})
-    throw error
-  }
-
-  return data
 }
 
-export async function deleteDesign(design: Design): Promise<void> {
-  const { error } = await supabase.from('designs').delete().eq('id', design.id)
+export async function deleteDesign(designId: string): Promise<void> {
+  // 1. Descobrir os arquivos antes de apagar a linha.
+  const { data: screens } = await supabase
+    .from('design_screens')
+    .select('storage_path, thumbnail_path')
+    .eq('design_id', designId)
+
+  // 2. Apagar o design (cascade remove as telas do banco).
+  const { error } = await supabase.from('designs').delete().eq('id', designId)
   if (error) throw error
-  // Só remove os arquivos depois que a linha saiu do banco.
-  await removeDesignFiles(design.user_id, design.id).catch(() => {})
+
+  // 3. Remover os arquivos do Storage.
+  const paths: string[] = []
+  for (const s of screens ?? []) {
+    paths.push(s.storage_path)
+    if (s.thumbnail_path) paths.push(s.thumbnail_path)
+  }
+  await removeFiles(paths).catch(() => {})
+}
+
+function fileTypeOf(file: File): FileType {
+  const ext = file.name.split('.').pop()?.toLowerCase() ?? ''
+  const map: Record<string, FileType> = {
+    png: 'png',
+    jpg: 'jpg',
+    jpeg: 'jpg',
+    svg: 'svg',
+    pdf: 'pdf',
+  }
+  const t = map[ext]
+  if (!t) throw new Error(`Formato não suportado: ${file.name}`)
+  return t
 }

@@ -23,12 +23,18 @@ export function fileTypeFromName(name: string): FileType | null {
   return EXT_TO_TYPE[ext] ?? null
 }
 
-export function originalPath(userId: string, designId: string, fileType: FileType) {
-  return `${userId}/${designId}/original.${fileType}`
+// Caminhos: {userId}/{designId}/{screenId}/original.<ext> e thumb.png
+export function screenOriginalPath(
+  userId: string,
+  designId: string,
+  screenId: string,
+  fileType: FileType,
+) {
+  return `${userId}/${designId}/${screenId}/original.${fileType}`
 }
 
-export function thumbPath(userId: string, designId: string) {
-  return `${userId}/${designId}/thumb.png`
+export function screenThumbPath(userId: string, designId: string, screenId: string) {
+  return `${userId}/${designId}/${screenId}/thumb.png`
 }
 
 export async function uploadFile(path: string, body: Blob | File, contentType: string) {
@@ -45,7 +51,7 @@ export async function signedUrl(path: string, expiresIn = 3600) {
   return data.signedUrl
 }
 
-// Gera várias signed URLs de uma vez (uma chamada só para o grid inteiro).
+// Gera várias signed URLs de uma vez (uma chamada só).
 export async function signedUrls(paths: string[], expiresIn = 3600) {
   const map: Record<string, string> = {}
   if (paths.length === 0) return map
@@ -57,14 +63,8 @@ export async function signedUrls(paths: string[], expiresIn = 3600) {
   return map
 }
 
-// Remove todos os arquivos da pasta de um design ({userId}/{designId}/...).
-export async function removeDesignFiles(userId: string, designId: string) {
-  const dir = `${userId}/${designId}`
-  const { data, error } = await supabase.storage.from(BUCKET).list(dir)
+export async function removeFiles(paths: string[]) {
+  if (paths.length === 0) return
+  const { error } = await supabase.storage.from(BUCKET).remove(paths)
   if (error) throw error
-  const paths = (data ?? []).map((f) => `${dir}/${f.name}`)
-  if (paths.length > 0) {
-    const { error: rmErr } = await supabase.storage.from(BUCKET).remove(paths)
-    if (rmErr) throw rmErr
-  }
 }
