@@ -92,7 +92,7 @@ export function DesignViewer({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-ink/60 p-3 backdrop-blur-sm sm:p-6"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-scrim/60 p-3 backdrop-blur-sm sm:p-6"
       onClick={onClose}
     >
       <div
@@ -179,7 +179,7 @@ export function DesignViewer({
               >
                 ›
               </button>
-              <span className="absolute bottom-3 left-1/2 -translate-x-1/2 rounded-full bg-ink/80 px-3 py-1 text-xs font-medium text-white backdrop-blur">
+              <span className="absolute bottom-3 left-1/2 -translate-x-1/2 rounded-full bg-scrim/80 px-3 py-1 text-xs font-medium text-white backdrop-blur">
                 {index + 1} / {total}
               </span>
             </>

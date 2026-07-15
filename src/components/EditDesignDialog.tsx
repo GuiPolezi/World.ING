@@ -145,7 +145,7 @@ export function EditDesignDialog({
 
   return (
     <div
-      className="fixed inset-0 z-[60] flex items-center justify-center bg-ink/50 p-3 backdrop-blur-sm sm:p-6"
+      className="fixed inset-0 z-[60] flex items-center justify-center bg-scrim/60 p-3 backdrop-blur-sm sm:p-6"
       onClick={onClose}
     >
       <div
@@ -326,7 +326,7 @@ export function EditDesignDialog({
           <button
             onClick={save}
             disabled={busy}
-            className="rounded-xl bg-ink px-4 py-2.5 text-sm font-medium text-white transition hover:bg-black disabled:opacity-60"
+            className="rounded-xl bg-ink px-4 py-2.5 text-sm font-medium text-canvas transition hover:opacity-90 disabled:opacity-60"
           >
             {busy ? 'Salvando…' : 'Salvar alterações'}
           </button>

@@ -27,7 +27,7 @@ export function DesignCard({
         )}
 
         {design.screenCount > 1 && (
-          <span className="absolute right-3 top-3 flex items-center gap-1 rounded-md bg-ink/80 px-2 py-0.5 text-[11px] font-medium text-white backdrop-blur">
+          <span className="absolute right-3 top-3 flex items-center gap-1 rounded-md bg-scrim/80 px-2 py-0.5 text-[11px] font-medium text-white backdrop-blur">
             <svg width="11" height="11" viewBox="0 0 14 14" fill="none" aria-hidden="true">
               <rect x="1.5" y="1.5" width="8" height="8" rx="1.5" stroke="currentColor" strokeWidth="1.4" />
               <path d="M4.5 12.5H11a1.5 1.5 0 0 0 1.5-1.5V4.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />

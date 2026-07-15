@@ -2,6 +2,7 @@ import { useState } from 'react'
 import type { ReactNode } from 'react'
 import { useAuth } from '@/context/AuthContext'
 import { Wordmark } from '@/components/Wordmark'
+import { ThemeToggle } from '@/components/ThemeToggle'
 
 type Mode = 'signin' | 'signup'
 
@@ -36,12 +37,15 @@ export default function Login() {
 
   return (
     <div className="relative min-h-full overflow-hidden">
+      <div className="absolute right-4 top-4 z-10 sm:right-6 sm:top-6">
+        <ThemeToggle />
+      </div>
       <div
         aria-hidden
         className="pointer-events-none absolute inset-0"
         style={{
           backgroundImage:
-            'linear-gradient(to right, #E6E8E8 1px, transparent 1px), linear-gradient(to bottom, #E6E8E8 1px, transparent 1px)',
+            'linear-gradient(to right, rgb(var(--line)) 1px, transparent 1px), linear-gradient(to bottom, rgb(var(--line)) 1px, transparent 1px)',
           backgroundSize: '64px 64px',
           maskImage: 'radial-gradient(ellipse 70% 60% at center, black 10%, transparent 70%)',
           WebkitMaskImage: 'radial-gradient(ellipse 70% 60% at center, black 10%, transparent 70%)',
@@ -92,7 +96,7 @@ export default function Login() {
               <button
                 onClick={handleSubmit}
                 disabled={submitting}
-                className="mt-2 w-full rounded-xl bg-ink px-4 py-3 text-sm font-medium text-white transition hover:bg-black disabled:opacity-60"
+                className="mt-2 w-full rounded-xl bg-ink px-4 py-3 text-sm font-medium text-canvas transition hover:opacity-90 disabled:opacity-60"
               >
                 {submitting ? 'Um instante…' : mode === 'signin' ? 'Entrar' : 'Criar conta'}
               </button>

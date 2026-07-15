@@ -9,6 +9,7 @@ import { UploadDialog } from '@/components/UploadDialog'
 import { DesignViewer } from '@/components/DesignViewer'
 import { EditDesignDialog } from '@/components/EditDesignDialog'
 import { GalleryToolbar } from '@/components/GalleryToolbar'
+import { ThemeToggle } from '@/components/ThemeToggle'
 
 export default function Home() {
   const { user, signOut } = useAuth()
@@ -86,6 +87,7 @@ export default function Home() {
           <Wordmark className="text-lg" />
           <div className="flex items-center gap-2 sm:gap-3">
             <span className="hidden text-sm text-muted sm:inline">{user?.email}</span>
+            <ThemeToggle />
             <Link
               to="/settings"
               aria-label="Configurações"
@@ -123,7 +125,7 @@ export default function Home() {
           </div>
           <button
             onClick={() => setUploadOpen(true)}
-            className="shrink-0 rounded-xl bg-ink px-4 py-2.5 text-sm font-medium text-white transition hover:bg-black"
+            className="shrink-0 rounded-xl bg-ink px-4 py-2.5 text-sm font-medium text-canvas transition hover:opacity-90"
           >
             <span className="sm:hidden">＋</span>
             <span className="hidden sm:inline">Adicionar design</span>

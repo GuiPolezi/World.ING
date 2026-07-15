@@ -7,6 +7,7 @@ import type { DesignRef } from '@/hooks/useProjectStats'
 import { createProject, renameProject, deleteProject } from '@/lib/projects'
 import { updateDesignProject } from '@/lib/designs'
 import { Wordmark } from '@/components/Wordmark'
+import { ThemeToggle } from '@/components/ThemeToggle'
 import type { Project } from '@/types/database'
 
 const inputClass =
@@ -31,7 +32,10 @@ export default function Settings() {
           <Link to="/" className="flex items-center gap-2 text-sm text-muted transition hover:text-ink">
             <span aria-hidden="true">‹</span> Galeria
           </Link>
-          <Wordmark className="text-base" />
+          <div className="flex items-center gap-3">
+            <ThemeToggle />
+            <Wordmark className="text-base" />
+          </div>
         </div>
       </header>
 
@@ -126,7 +130,7 @@ function ProjectsSection({
         <button
           onClick={handleCreate}
           disabled={busy || !newName.trim()}
-          className="shrink-0 rounded-xl bg-ink px-4 py-2.5 text-sm font-medium text-white transition hover:bg-black disabled:opacity-60"
+          className="shrink-0 rounded-xl bg-ink px-4 py-2.5 text-sm font-medium text-canvas transition hover:opacity-90 disabled:opacity-60"
         >
           Criar
         </button>
@@ -226,7 +230,7 @@ function ProjectRow({
         <button
           onClick={save}
           disabled={busy}
-          className="shrink-0 rounded-lg bg-ink px-3 py-2 text-sm font-medium text-white transition hover:bg-black disabled:opacity-60"
+          className="shrink-0 rounded-lg bg-ink px-3 py-2 text-sm font-medium text-canvas transition hover:opacity-90 disabled:opacity-60"
         >
           Salvar
         </button>
@@ -450,7 +454,7 @@ function AccountSection({
           <button
             onClick={submit}
             disabled={busy || !password || !confirm}
-            className="rounded-xl bg-ink px-4 py-2.5 text-sm font-medium text-white transition hover:bg-black disabled:opacity-60"
+            className="rounded-xl bg-ink px-4 py-2.5 text-sm font-medium text-canvas transition hover:opacity-90 disabled:opacity-60"
           >
             {busy ? 'Atualizando…' : 'Atualizar senha'}
           </button>

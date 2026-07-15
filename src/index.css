@@ -2,8 +2,29 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Tokens de cor em canais RGB (para permitir opacidade via Tailwind). */
 :root {
+  --canvas: 247 248 248;
+  --surface: 255 255 255;
+  --ink: 23 24 26;
+  --muted: 107 112 118;
+  --line: 230 232 232;
+  --scrim: 23 24 26;
+  --accent: 59 59 232;
+  --accent-soft: 237 237 253;
   color-scheme: light;
+}
+
+.dark {
+  --canvas: 14 15 17;
+  --surface: 24 25 28;
+  --ink: 240 241 243;
+  --muted: 150 156 162;
+  --line: 38 40 45;
+  --scrim: 4 5 7;
+  --accent: 124 122 245;
+  --accent-soft: 34 34 60;
+  color-scheme: dark;
 }
 
 html,
@@ -14,9 +35,10 @@ body,
 
 body {
   margin: 0;
-  background-color: #f7f8f8;
-  color: #17181a;
+  background-color: rgb(var(--canvas));
+  color: rgb(var(--ink));
   font-family: 'Inter', system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+  transition: background-color 0.2s ease, color 0.2s ease;
 }

@@ -1,17 +1,19 @@
 /** @type {import('tailwindcss').Config} */
 export default {
+  darkMode: 'class',
   content: ['./index.html', './src/**/*.{ts,tsx}'],
   theme: {
     extend: {
       colors: {
-        canvas: '#F7F8F8',
-        surface: '#FFFFFF',
-        ink: '#17181A',
-        muted: '#6B7076',
-        line: '#E6E8E8',
+        canvas: 'rgb(var(--canvas) / <alpha-value>)',
+        surface: 'rgb(var(--surface) / <alpha-value>)',
+        ink: 'rgb(var(--ink) / <alpha-value>)',
+        muted: 'rgb(var(--muted) / <alpha-value>)',
+        line: 'rgb(var(--line) / <alpha-value>)',
+        scrim: 'rgb(var(--scrim) / <alpha-value>)',
         accent: {
-          DEFAULT: '#3B3BE8',
-          soft: '#EDEDFD',
+          DEFAULT: 'rgb(var(--accent) / <alpha-value>)',
+          soft: 'rgb(var(--accent-soft) / <alpha-value>)',
         },
       },
       fontFamily: {

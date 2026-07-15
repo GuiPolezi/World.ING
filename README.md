@@ -36,6 +36,7 @@ only through short-lived signed URLs, scoped to your account.
 - **Full editing.** Change a design's title, description, tags and project, and add, remove or reorder its screens. The first screen is the cover.
 - **Settings.** Create, rename and delete projects; move a design between projects; change your password; and see a storage overview.
 - **Private by design.** Row-level security on every table and per-user storage folders. Nothing is public.
+- **Light & dark themes.** A minimal switcher in the header; the entire interface adapts, and your choice is remembered.
 - **Responsive & modern.** Built mobile-first with a restrained, minimal aesthetic.
 
 ## Tech stack
